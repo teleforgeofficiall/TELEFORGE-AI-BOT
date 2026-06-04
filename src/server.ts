@@ -23,6 +23,10 @@ async function main(): Promise<void> {
   if (env.NODE_ENV === 'development') {
     const app = express();
 
+    app.get('/', (_req, res) => {
+      res.send('bot is running');
+    });
+
     app.get('/health', (_req, res) => {
       const validation = getValidationResult();
       res.json({
@@ -51,6 +55,10 @@ async function main(): Promise<void> {
         req.rawBody = buf.toString();
       },
     }));
+
+    app.get('/', (_req, res) => {
+      res.send('bot is running');
+    });
 
     app.get('/health', (_req, res) => {
       const validation = getValidationResult();
