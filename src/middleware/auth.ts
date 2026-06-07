@@ -43,6 +43,7 @@ export async function authMiddleware(ctx: Context, next: () => Promise<void>): P
         firstName: dbUser.firstName,
         lastName: dbUser.lastName,
         username: dbUser.username,
+        isPremium: dbUser.isPremium,
         isAdmin: dbUser.isAdmin,
         isOwner: dbUser.isOwner,
       },

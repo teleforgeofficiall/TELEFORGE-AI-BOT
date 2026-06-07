@@ -1,3 +1,6 @@
+import { PrismaClient } from '@prisma/client';
+import { CONFIG } from '../config';
+
 export function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage?: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -155,4 +158,27 @@ export function trackBotMessage(ctx: any, messageId: number): void {
     ctx.session.botMessageIds = [];
   }
   ctx.session.botMessageIds.push(messageId);
+}
+
+export async function checkImageDailyLimit(prisma: PrismaClient, userId: number): Promise<{ allowed: boolean; used: number; limit: number; remaining: number }> {
+  const dbUser = await prisma.user.findUnique({ where: { telegramId: BigInt(userId) } });
+  const limit = dbUser?.isPremium ? CONFIG.IMAGE.DAILY_LIMIT_PREMIUM : CONFIG.IMAGE.DAILY_LIMIT_FREE;
+
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  const used = await prisma.analytics.count({
+    where: {
+      userId: BigInt(userId),
+      event: 'image_generate',
+      createdAt: { gte: todayStart },
+    },
+  });
+
+  return {
+    allowed: used < limit,
+    used,
+    limit,
+    remaining: Math.max(0, limit - used),
+  };
 }

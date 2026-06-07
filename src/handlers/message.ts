@@ -6,7 +6,7 @@ import { requireMembership } from '../services/channel';
 import { rateLimit } from '../middleware/rateLimiter';
 import { withLock } from '../middleware/lock';
 import { BotContext, ChatMessage } from '../types';
-import { splitMessage, deletePreviousBotMessages, trackBotMessage, premium, formatAIResponse, detectLanguage } from '../utils/helpers';
+import { splitMessage, deletePreviousBotMessages, trackBotMessage, premium, formatAIResponse, detectLanguage, checkImageDailyLimit } from '../utils/helpers';
 import { CONFIG } from '../config';
 import { captureMessageInfo, handleBroadcastConfirm } from './broadcast';
 import { handlePaymentScreenshot, handleSaveUpiId, handleGrantPremiumManual } from './premium';
@@ -340,6 +340,25 @@ async function handleImageGenPrompt(ctx: BotContext, prompt: string, userId: num
   const typingInterval = setInterval(() => ctx.telegram.sendChatAction(ctx.chat!.id, 'upload_photo').catch(() => {}), 4000);
 
   try {
+    const limit = await checkImageDailyLimit(prisma, userId);
+    if (!limit.allowed) {
+      const isPremium = (ctx.state.dbUser?.isPremium ?? false);
+      const upsell = premium('❌', 'Daily Limit Reached',
+        isPremium
+          ? `You have used ${limit.used}/${limit.limit} image generations today.\n\nTry again tomorrow.`
+          : `You have used ${limit.used}/${limit.limit} image generations today.\n\n💎 Upgrade to Premium for ${limit.limit === 5 ? CONFIG.IMAGE.DAILY_LIMIT_PREMIUM : 50} generations per day!`
+      );
+      const buttons = isPremium
+        ? []
+        : [[{ text: '💎 Premium', callback_data: 'premium_home' }]];
+      const msg = await ctx.reply(upsell, {
+        parse_mode: 'HTML',
+        ...(buttons.length ? { reply_markup: { inline_keyboard: buttons } } : {}),
+      });
+      trackBotMessage(ctx, msg.message_id);
+      return;
+    }
+
     const msg = await ctx.reply(premium('🖼', 'TeleForge AI', 'Generating your image...'), { parse_mode: 'HTML' });
 
     const result = await generateImage(prompt);

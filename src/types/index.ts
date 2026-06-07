@@ -62,6 +62,7 @@ export interface BotState {
     firstName: string | null;
     lastName: string | null;
     username: string | null;
+    isPremium: boolean;
     isAdmin: boolean;
     isOwner: boolean;
   };

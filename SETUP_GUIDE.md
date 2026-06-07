@@ -304,25 +304,3 @@ Neon Console → Your Project → **Tables** — view/query data directly
 | `NODE_ENV` | ❌ No | `development` | `development` = polling, `production` = webhook |
 
 ---
-
-## 📁 Project Structure
-
-```
-TELEFORGE-AI-BOT/
-├── src/
-│   ├── bot/          # Bot initialization & commands
-│   ├── config/       # Env validation, protected channel
-│   ├── database/     # Prisma client
-│   ├── handlers/     # Message, callback, admin, premium, etc.
-│   ├── middleware/    # Auth, rate limiter, user lock
-│   ├── prompts/      # AI system prompts (chat, code, translate, etc.)
-│   ├── services/     # AI (Gemini), image gen (Cloudflare)
-│   ├── types/        # TypeScript types
-│   └── utils/        # Helpers, logger, cache
-├── prisma/           # Schema & migrations
-├── cloudflare-worker.js  # Cloudflare Workers AI code
-├── render.yaml       # Render deployment config
-├── Dockerfile        # Docker deployment
-├── start.bat         # Quick local start
-└── SETUP_GUIDE.md    # This file
-```
